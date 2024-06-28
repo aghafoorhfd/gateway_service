@@ -1,0 +1,73 @@
+server:
+    port: 8096
+    servlet:
+        context-path: /gateway_service
+        encoding:
+            force: true
+
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: "*"
+        
+spring:
+    application:
+        name: gateway_service
+    batch:
+        job:
+            enabled: false
+    cloud:
+        gateway:
+            default-filters:
+                - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+            globalcors:
+                cors-configurations:
+                    '[/**]':
+                        allow-credentials: false
+                        allowedOriginPatterns: "*"
+                        allowedHeaders: "*"
+                        allowedMethods:
+                            - GET
+                            - POST
+                            - PUT
+                            - DELETE
+                            - PATCH
+                            - OPTIONS
+
+            routes:
+                - id: auth_service
+                  uri: lb://auth_service
+                  predicates: Path=/api/auth/**
+    main:
+        allow-bean-definition-overriding: true
+    profiles:
+        active: develop
+
+feign:
+    logging: BASIC
+
+auth:
+    service:
+        url: http://localhost:8080/auth_service/api/users
+        readTimeout: 60000
+        connectTimeout: 30000
+        followRedirects: false
+
+keycloak:
+    realm: master
+    auth-server-url: http://localhost:8180/
+    ssl-required: external
+    resource: admin-cli
+    credentials:
+        secret: VZyN3N4UAy8xwl82QWSWeiMouQDV8ziV
+    bearer-only: true
+    cors: true
+    public-client: true
+kc:
+    admin:
+        user: admin
+        password: admin
+    pmo-client: auth-service
+    
